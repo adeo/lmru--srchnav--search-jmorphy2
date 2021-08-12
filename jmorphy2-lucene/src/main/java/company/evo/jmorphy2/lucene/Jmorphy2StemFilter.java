@@ -1,15 +1,12 @@
 package company.evo.jmorphy2.lucene;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Optional;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import java.util.stream.Collectors;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -123,14 +120,14 @@ public class Jmorphy2StemFilter extends TokenFilter {
         return true;
     }
 
-    private List<String> getNormalForms(CharTermAttribute termAtt) throws IOException {
-        List<ParsedWord> normalForms = new ArrayList<ParsedWord>();
-        Set<String> uniqueNormalForms = new HashSet<String>();
+    private List<String> getNormalForms(CharTermAttribute termAtt) {
+        List<String> normalForms = new ArrayList<>();
+        Set<String> uniqueNormalForms = new HashSet<>();
 
         char[] termBuffer = termAtt.buffer();
         int termLength = termAtt.length();
         String token = new String(termBuffer, 0, termLength);
-        
+
         List<ParsedWord> parseds = morph.parse(token);
 
         for (ParsedWord p : parseds) {
@@ -158,17 +155,12 @@ public class Jmorphy2StemFilter extends TokenFilter {
             }
 
             if (shouldAdd && !uniqueNormalForms.contains(p.normalForm)) {
-                normalForms.add(p);
+                normalForms.add(p.normalForm);
                 uniqueNormalForms.add(p.normalForm);
             }
         }
 
-        Optional<ParsedWord> wordWithMaxScore = normalForms
-            .stream().max((firstWord, secondWord) -> Float.compare(firstWord.score, secondWord.score));
-
-        return wordWithMaxScore
-            .map(parsedWord -> Collections.singletonList(parsedWord.normalForm))
-            .orElse(normalForms.stream().map(parsedWord -> parsedWord.normalForm).collect(Collectors.toList()));
+        return normalForms;
     }
 
     private void setTerm(String stem, int posInc) {
